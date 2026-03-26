@@ -1,0 +1,150 @@
+---
+title: "Biostat_w3"
+output: html_document
+date: "2026-02-10"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**Opgave 2a** 
+
+Indlæs datasættet:
+
+jeg sætter working directory/mappe hvori min fil ligger - og loader herefter filen
+
+```{r}
+setwd("C:/Users/idol/OneDrive - Syddansk Universitet/Documents/PhD/Undervisning/Biostat F26")
+load(file="Nielsen.RData")
+```
+
+**Opgave 2b**
+
+Undersøg vha. logistisk regression, om lymfekræft er associeret med tatovering uden der justeres for noget. Hvad er konklusionen, hvor man iddrager estimatet, 95% CI og p-værdi
+
+Nu skal vi til at køre en logistisk regression. Her skal vi først give funktionen et navn (det er til venstre fra "<-") så bagefter kalder vi, at det skal være en generalized linear model, og så skal vi specificere at det er en logistisk regression ved at kalde family = "binomial" for binært outcome variable (0/1). 
+
+
+```{r}
+logreg <- glm(factor(case) ~ factor(tatoo), data = subset(Nielsen,sex==1), family = "binomial")
+summary(logreg)
+confint(logreg)
+
+```
+Her har vi så svaret. Men hvad betyder resultaterne? 
+Vi er ikke interesseret i (intercept), men i stedet for factor(tatoo)1. Som er: ÆNDRINGEN i log-odds, når man går fra ingen tatovering til at have en tatovering. Log-odds er 0.059, p = 0.639, 95% CI (log-odds): [-0.19;0.30]
+ 
+I koden confint(logreg) og coef(logreg) beder jeg om estimatet og konfidensintervallet for den logistiske regression - hvorfor giver disse tal ikke særlig god mening på nuværende tidspunkt? 
+
+```{r}
+exp(coef(logreg))
+exp(confint(logreg))
+```
+Vores resultater før var log-odds, men de tal siger os ikke rigtig så meget. Derfor bruger vi altså overstående kommando (modsatte af log-odds - vi eksponentierer) for at få odds-ratio i stedet for, som er nemmere at fortolke på. 
+
+Vi kigger stadig ikke på (Intercept). Og skal derfor i outputtet se efter factor(tatoo)1. 
+
+Konklusion: Personer med tatovering har 6% højere odds for lymfekræft sammenglinet med personer uden tatovering. Men konfidensintervallet inkluderer 1 og p-værdien er 0.639. Der er ingen statistisk evidens for en association mellem tatovering og lymfekræft.
+
+**Opgave 2c** 
+
+Undersøg ved hjælp af en logistisk regression, om lymfekræft er associeret med tatovering justeret for alder. Hvad er konklusionen, hvor man inddrager estimat, 95% CI og p-værdi?
+
+```{r}
+log_adj <- glm(factor(case)~factor(tatoo)+age,data=subset(Nielsen,sex==1),family="binomial")
+summary(log_adj)
+```
+Allerede her kan vi se, at det ikke ændrer på estimatet eller p-værdien for tattoo, at vi tilføjer alder. 
+
+Ligesom før har vi nu tallene i outputtet som log-odds. Det er ikke specielt informativt. Derfor køres koderne:
+
+```{r}
+exp(coef(log_adj))
+exp(confint(log_adj))
+```
+Konklusion: Estimatet for tatovering er 1.06, mens konfidensintervallet er [0.83-1.35] og p = 0.639. Altså identisk med før. Det tyder på, at alder ikke confounder sammenhængen mellem tatovering og lymfekræft. Derudover kan vi også se at alder ikke er associeret med outcome (p = 0.999)
+
+**Opgave 2d**
+
+```{r}
+library("performance")
+performance_hosmer(log_adj, n_bins = 8)
+```
+Hosmer-Lemeshow testen evalueer om de forudsagte sandsynligheder fra modellen matcher de observerede frekvenser i dataene. Den opdeler observationerne i grupper (bins) og sammenligner: forvetende antal events (baseret på modellen) med observede antal event (faktiske data).
+
+Fortolkning: 
+p-værdi > 0.05. God model fit
+p-værdi < 0.05. dårlige model fit. 
+
+Valget af bins er en af de største begrænsinger ved metoden her. 
+Men tommelfinger regler:
+
+Regel 1: Minimum observationer per bin: Hver bin bør have mindst 5-10 forventede events 
+
+Eksempel beregning:
+
+```{r}
+antal_event <- sum(Nielsen$case==1)
+antal_event
+min_bins <- antal_event/8
+min_bins
+```
+Regel 2: Baseret på stikprøvestørrelse
+n < 400: Brug 8-10 bins
+n = 400-1000: brug 10 bins
+n > 1000: kan bruge 10-15 bins
+
+**Opgave 3b**
+
+Undersøg vha. logistisk regression, om lymfekræft er associeret med tatovering uden der justeres for noget. Hvad er konklusionen, hvor man iddrager estimatet, 95% CI og p-værdi (For mænd)
+
+
+```{r}
+logreg <- glm(factor(case) ~ factor(tatoo), data = subset(Nielsen,sex==0), family = "binomial")
+summary(logreg)
+confint(logreg)
+
+```
+p = 0.00495
+
+```{r}
+exp(coef(logreg))
+exp(confint(logreg))
+```
+Konklusion: Mænd med tatovering(er) har 32% højere odds for lymfekræft sammenlignet med personer uden tatovering(er). Konfidensintervallet inkluderer ikke 1, p = 0.00495. Der er statistisk evidens for en association mellem tatovering og lymfekræft.
+
+**Opgave 3c** 
+
+Undersøg ved hjælp af en logistisk regression, om lymfekræft er associeret med tatovering justeret for alder. Hvad er konklusionen, hvor man inddrager estimat, 95% CI og p-værdi?
+
+```{r}
+log_adj <- glm(case~tatoo+age,data=subset(Nielsen,sex==0),family="binomial")
+summary(log_adj)
+```
+Allerede her kan vi se, at eksponentieringen ikke ændrer sønderligt på estimatet eller p-værdien for tattoo efter vi justerer for alder. 
+
+```{r}
+exp(coef(log_adj))
+exp(confint(log_adj))
+```
+Konklusion: Estimatet for tatovering er fortsat 1.32, mens konfidensintervallet er [1.09-1.60]. Altså tæt på at være identisk med resultatet før. Det tyder fortsat ikke på at alder confounder sammenhængen mellem tatovering og lymfekræft. Derudover kan vi også se, at alder ikke er associeret med outcome (p = 0.47).
+
+** Opgave 3d ** 
+
+```{r}
+performance_hosmer(log_adj, n_bins = 10)
+```
+
+Omnibus-testen: en test for om min logistiske regressionsmodel som helhed er signifikant. Denne test sammenligner: null-modellen (model uden prediktorer) og min model (med alle prediktorer). 
+
+```{r}
+null_model <- glm(case~1,family="binomial",data=subset(Nielsen,sex==1))
+anova(null_model,log_adj,test="Chisq")
+```
+```{r}
+library(rms)
+logadj_res <- lrm(case~tatoo+age,data=subset(Nielsen,sex==1),y=TRUE,x=TRUE)
+residuals(logadj_res,type="gof")
+```
+

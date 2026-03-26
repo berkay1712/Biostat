@@ -1,0 +1,224 @@
+---
+title: "stat_4"
+author: "Helle Bruhn"
+date: "2026-02-17"
+output: pdf_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Sætter workingdir og gemmer mit script
+
+```{r}
+setwd("C:/Users/hbruhn/OneDrive - Syddansk Universitet/F2026Epi_biostat_med/Statistik 4_Interaktioner og modelevaluering")
+```
+
+Pakker
+
+```{r}
+library(pastecs) # til stat.desc
+library(sur)
+library(gmodels)
+library(boot)
+library(dplyr) # til metoden, hvor vi benytter denne %>% 
+library(ggplot2) # til at lave de flotte plots
+library(haven) # for at kunne faktoriserer variable
+library(dplyr) # for at kunne bruge group_by og summarise)
+library(interactions) # for at kunne lave interaktionsplot
+```
+
+**OPGAVE 1.a** Indlæs datasættet "Andersen.RData"
+
+```{r}
+load("Andersen.RData")
+```
+
+Kigger i data:
+
+```{r}
+head(Andersen)
+View(Andersen)
+str(Andersen)
+```
+
+**OPGAVE 1.b** Undersøger: Spiser dem som spiser økologisk, større
+mængde frugt?
+
+Juster derefter for køn.
+
+Hvad er konklusionen?
+
+```{r}
+linreg <- lm(fruits ~ factor(ecological), data=Andersen)
+summary(linreg)
+confint(linreg)
+
+#Justering af model for køn:  
+linreg_adj <- lm(fruits ~ factor(ecological) + factor(sex), data=Andersen)
+summary(linreg_adj)
+
+confint(linreg_adj)
+```
+
+Fortolkning: vi ser at dem som spiser økologisk spiser i gennemsnit
+67.36 gram frugt mere, end dem som ikke spiser økologisk. P-værdi =
+0.000781, som er \<0.05 og derfor statistisk signifikant.
+Konfindensinterval [28.24;106.50]. Når vi justere for køn, ser vi at dem
+som spiser økologisk spiser i gennemsnit 31.2 gram frugt mere end dem
+som ikke spiser økologisk. Estimatet er dog ikke længere signifikant, og
+dette ses også når konfindensintervallet [-10.05878 ; 72.49257] går
+gennem 0. Samlet fortæller de to modeller os altså at der ikke er
+signifikant forskel i gennemsnitlig indtag af frugt ml. dem som spiser
+økologisk og dem som ikke gør.
+
+**Opgave 1.c** Undersøg om forudsætninger for lineær regression er
+opfyldt for den justerede model. Konklusion?
+
+Forudsætningerne: - Lineær sammenhæng ml. afhængig og uafhængige
+variable - Normalfordelte residualer - Homoskedasticitet
+(Varianshomogenitet) - Uafhængige observationer (kan vi ikke tjekke, men
+læse i studiedesign)
+
+```{r}
+par(mfrow = c(2, 2)) #Deler grafvinduet op i 2x2 grid 
+plot(linreg_adj) # kommandoen laver fire standarddiagnostiske plots fra den justerede lineære model
+```
+
+Fortolkning: Vi har binært eksponering og kontinueligt outcome. Derfor
+ser vi opdeling i to søjler.
+
+Residual vs. Fitted: Vi ser at residualerne er nogenlunde symmetrisk
+fordelt omkring 0 i begge søjler (en for hver gruppe), og spredningen
+ser nogenlunde ens ud. Der er altså en lineær sammenhæng ml. eksponering
+og udfald.
+
+Scale-location: Vi ser at de standardiserede residualer har nogenlunde
+samme spredning i begge grupper, og at de ikke har en systematisk
+mønster, vi kigger på den røde linje og ser at den er næsten flad.
+
+**Det tyder på at forudsætningen om homoskedasticitet er opfyldt**
+
+Q-Q plot: Vi ser at observationerne fordeler sig nogenlunde efter den
+lige line, hvilket tyder på at forudsætningen om normalfordelte
+residualer er opfyldt
+
+Residuals vs. Leverage: Vi ser at ingen observationer har høj leverage,
+og ingen har en kombination af høj leverage og høj residual, da ingen
+observationer ligger udenfor de stiplede linjer. Der er altså ikke nogen
+outliers.
+
+Samlet set vurderes modelantagelserne at være rimeligt opfyldt.
+
+**OPGAVE 1.d** Undersøg om der er en interaktion mellem køn og økologi i
+deres association med mængden af frugt.
+
+```{r}
+linreg_interakt <- lm(fruits ~ factor(ecological)*factor(sex), data=Andersen) #her bliver outcome derfor mængden af frugt 
+summary(linreg_interakt)
+```
+
+Fortolkning: (Intercept) = 303.47 :en kvinde der spiser ikke-økologisk
+spiser i gennemsnit 303.5 g frugt. factor(ecological)1 = –2.885 :en
+kvinde der spiser økologisk spiser mindre frugt, ikke signifikant, så
+derfor ingen forskel. factor(sex)2 = –113.66 (p \< 0.001) :forskel ml.
+mænd og kvinder, for ikke økologisk, fordi interaktion er med i
+modellen. Mænd spiser mindre frugt. factor(ecological)1:factor(sex)2 =
++133.56 (p = 0.005) her kommer interaktionen, og det er signifikant.
+
+Der opstår altså en større forskel, når personen både - er mand og -
+køber økologisk sammenlignet med, hvad vi ville forvente ud fra køn og
+økologi hver for sig. Så vi har her en additiv interaktion, hvor den
+samlede effekt af at være mand og spise økologisk er større end summen
+af de individuelle effekter af køn og økologi.
+
+**Opgave 1.e** Analyse hvor associationen mellem økologisk og mængden af
+frugt splittes op i køn.
+
+```{r}
+linreg_kvinder <- lm(fruits ~ factor(ecological), data=Andersen %>% filter(sex == 1)) # her er outcome stadig mængden af frugt, og vi filtrere på kvinder
+summary(linreg_kvinder)   
+linreg_maend <- lm(fruits ~ factor(ecological), data=Andersen %>% filter(sex == 2)) # her er outcome stadig mængden af frugt, og vi filtrere på mænd
+summary(linreg_maend)
+```
+
+Fortolkning: Forsat det samme - Interaktionen ml. indtag af frugt og det
+at spise økologisk er signifikant for mænd, og ikke for kvinder.
+
+***OPGAVE 2***
+Forskellen fra opgave 1, er at vi nu også skal justere for alder i vores modeller. 
+
+**Opgave 2.a** Datasættet indlæses. 
+
+**Opgave 2.b** Undersøg ved hjælp af en statistisk test, om dem som spiser økologisk, spiser en større mængde frugt, når der er justeret for alder. Dernæst skal der også justeres for køn. Hvad er konklusionen af disse to outputs, hvor man inddrager estimatet, 95% CI og p-værdi af sidste model?
+
+```{r}
+linreg_alder <- lm(fruits ~ factor(ecological) + age, data=Andersen)
+summary(linreg_alder)
+confint(linreg_alder)
+
+#Nu justeres for køn også:
+linreg_alder_kon <- lm(fruits ~ factor(ecological) + age + factor(sex), data=Andersen)
+summary(linreg_alder_kon)
+confint(linreg_alder_kon)
+```
+Fortolkning:
+Model linreg_alder: Når der justeres for alder spiser personer, der også spiser øko, signifikant 
+mere frugt - i gennemsnit 68 gram mere per dag, end dem, der ikke køber øko (p = 0.000656, 95% CI [29.26;107.61])
+
+Model linreg_alder_kon: Når der justeres for alder og køn, er forskellen i frugtindtag mellem  økologiske og ikke-økologiske spisere ikke længere statistik signifkant. Estimatet er: 32 gram per dag, men p = 0.126, og 95% CI inkluderer 0: [-9.08;73.53]
+
+**Opgave 2.c**
+Undersøg, om forudsætninger er opfyldt i ovenstående analyse hvor du justerer for alder og køn. Hvad er konklusionen? 
+
+(forudsætningerne står længere oppe i dokumentet)
+```{r}
+par(mfrow = c(2, 2)) #Deler grafvinduet op i 2x2 grid
+plot(linreg_alder_kon) # kommandoen laver fire standarddiagnostiske plots fra den justerede lineære model
+```
+Fortolkning: 
+Residuals vs. Fitted
+Viser residualer plottet mod fitted values for at tjekke linearitet. Residualerne er spredt nogenlunde tilfældigt omkring nul-linjen uden tydelige mønstre, hvilket indikerer at linearitetsforudsætningen er opfyldt. 
+
+Q-Q Residuals Sammenligner residualernes fordeling med normalfordelingen for at tjekke normalitet. Punkterne følger stortset den teoretiske linje. Normalitets-forudsætningen ser rimelig opfyldt ud. 
+Scale-Location Tjekker homoskedasticitet ved at plotte kvadratroden af standardiserede residualer mod fitted values. Punkterne er nogenlunde jævnt spredt, og den røde linje er relativt flad. Tyder på konstant varians.
+
+Residuals vs. Leverage Identificerer outliers og indflydelsesrige observationer. Få observationer har høj leverage, men ingen krydser Cook's distance-linjerne, så ingen observationer har kritisk stor indflydelse
+
+Konklusionen: Modelforudsætningerne er generelt opfyldt. Linearitet, normalitet og homoskedasticitet ser acceptabel ud, og der er ingen problematiske outliers.
+
+
+**Opgave 2.d**
+Undersøg, om der er en interaktion mellem økologi og køn i deres association med mængden af frugt, når der justeres for alder. Hvad er konklusionen?
+```{r}
+linreg_interakt_alder <- lm(fruits ~ factor(ecological)*factor(sex) + age, data=Andersen)
+summary(linreg_interakt_alder)  
+
+```
+Fortolkning af koefficienterne:
+  
+Intercept (74.319): Gennemsnitligt frugtindtag for referencegruppen (ikke-økologisk, køn=1/kvinder) ved alder 0
+Ecological effect (-2.277): For referencegruppen (kvinder) er der næsten ingen forskel mellem økologisk og ikke-økologisk spisere (ikke signifikant, p=0.925)
+Sex effect (-114.428): For ikke-økologiske personer spiser køn=2 (mænd) betydeligt mindre frugt end køn=1 (kvinder)
+Age effect (3.765): For hvert år ældre spises der 3.8 gram mere frugt (ikke signifikant)
+Interaktion (135.463): Den ekstra effekt når både økologi=1 og køn=2 (mænd)
+
+Konklusion:
+Selv efter justering for alder forbliver interaktionen signifikant - økologiske spisere påvirker kun frugtindtaget hos mænd, ikke hos kvinder.
+
+
+**Opgave 2.e**Lav en analyse, hvor associationen mellem mængden af frugt og økologi justeret for alder, splittes op i kvinder og mænd. Hvad er konklusionen? 
+```{r}
+linreg_kvinder_alder <- lm(fruits ~ factor(ecological) + age, data=Andersen %>% filter(sex == 1)) # her er outcome stadig mængden af frugt, og vi filtrere på kvinder    
+summary(linreg_kvinder_alder)
+
+linreg_maend_alder <- lm(fruits ~ factor(ecological) + age, data=Andersen %>% filter(sex == 2)) # her er outcome stadig mængden af frugt, og vi filtrere på mænd
+summary(linreg_maend_alder)
+```
+
+Fortolkning:
+Når analysen splittes op og der justeres for alder forbliver interaktionen signifikant - økologiske spisere påvirker kun frugtindtaget hos mænd, ikke hos kvinder.

@@ -1,0 +1,109 @@
+---
+title: "STAT_7"
+author: "Helle Bruhn"
+date: "2026-03-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Set working directory
+```{r}
+setwd("C:/Users/hbruhn/OneDrive - Syddansk Universitet/F2026Epi_biostat_med/Statistik 7_eksamensopgave")
+```
+Pakker:
+```{r}
+library(haven)
+library(performance)
+library(knitr)
+library(dplyr)
+library(survival)
+library(ggplot2)
+library(tibble)
+library(caret)
+library(pROC)
+```
+
+**OPGAVE 5**
+Load data
+```{r}
+load("Moeller.RData") 
+
+#ANBEFALING INDEN SELVE EKSAMEN
+#Kig i data og få et overblik over variablerne, brug fx
+head(Moeller) #de første 6 rækker i datasættet, giver overblik over indhold
+summary(Moeller) #giver mening til kontinuelige variabler, man ser min,mean,max
+prop.table(table(Moeller$overweight)) #kan give et overblik over hvordan fordelingen er i grupperne i procent, skriv variables navn efter $
+prop.table(table(Moeller$sex))
+View(Moeller) #ser hele datasættet
+str(Moeller) #giver et overblik over hvordan variablerne er kodet, og hvilke værdier de kan antage.
+```
+
+5.a Foretag en ujusteret logistisk regression med overvægt som udfald og køn som eksponering. Fortolk resultaterne.
+```{r}
+logreg <- glm(factor(overweight) ~ factor(sex), data = Moeller, family = "binomial") 
+summary(logreg) 
+
+exp(coef(logreg)) 
+exp(confint(logreg)) 
+```
+Fortolkning: Vi bestemmer en OR på 1.23 med et 95%-konfidensinterval på 1.14-1.33. 
+Så piger har 23% højere odds for overvægt end drenge, og vi er 95% sikre på at disse øgede odds er mellem 14% og 33% forøgelse.
+Spørgmål: Hvordan ved vi fra outputtet, at det er pigerne, som har de 23% højere odds for overvægt? Vær sikker på, at I forstår hvordan outputtet skal læses.  
+
+5.b: Juster regressionen fra A) for morens alder. Fortolk resultaterne 
+```{r}
+logreg_adj <- glm(factor(overweight) ~ factor(sex) + maternalage, data = Moeller, family = "binomial") 
+summary(logreg_adj) 
+
+exp(coef(logreg_adj)) 
+exp(confint(logreg_adj))
+```
+Fotolkning: Justeret for morens alder er OR for køn stadig OR=1.23, så justeringen ændrer meget lidt. Vi kan også se at morens alder ikke er tydelig associeret med overvægt (P=0.051 og OR=0.991, konfidensinterval [0.98; 1.00] går gennem 1).
+
+5.c: Hvilke modelantagelser har modellen fra B)? Tjek relevante modelantagelser på data. 
+```{r}
+performance_hosmer(logreg_adj, n_bins = 10)
+```
+Modelantagelser:
+Uafhængighed kan ikke tjekkes, men der er en opmærksomhed på, at få kvinder inkluderes to gange i studiet (4,1%), artiklen nævner dette på side 4, under statistik analyse, og da de redegøre for hvordan de håndtere det, og andelen er lille vurderes denne forudsætning opfyldt.
+
+Derudover skal vi undersøge, om sammenhængen med morens alder kan antages at være log-lineær, og om modellen generelt passer godt til data. Begge dele kan vurderes med Hosmer–Lemeshow-testen. Testen giver her en p-værdi på 0.316, hvilket tyder på, at modellen har en acceptabel overensstemmelse med de observerede data.
+
+OBS! Vi har siden i kurset opdateret valget af test til Omnibus fordi: Hosmer-Lemeshow testen evalueer om de forudsagte sandsynligheder fra modellen matcher de observerede frekvenser i dataene. Den opdeler observationerne i grupper (bins) og sammenligner: forvetende antal events (baseret på modellen) med observede antal event (faktiske data).
+
+Fortolkning: 
+p-værdi > 0.05. God model fit
+p-værdi < 0.05. dårlige model fit. 
+
+Valget af bins er en af de største begrænsinger ved metoden her. 
+Men tommelfinger regler:
+
+Regel 1: Minimum observationer per bin: Hver bin bør have mindst 5-10 forventede events. Se evt. løsningen fra stat_3.
+
+**Opgave 6**
+6.a. Lav koden for en prædiktionsmodel, der prædikterer risikoen for overvægt baseret på barnets køn og morens alder og forklar hvad i gør.
+```{r}
+logreg_præ <- glm(factor(overweight) ~ factor(sex)+maternalage, data = Moeller, family = "binomial") 
+Moeller = cbind(Moeller,response=predict(logreg_præ, Moeller, type="response")) 
+```
+Forklaring: Vi anvender en logistisk regression til at prædikere overvægt baseret på køn og morens alder for alle børn i datasættet. Vi tilføjer variablen "response" til Moeller data, og denne vil være en sandsynlighed for overvægt (outcome).
+
+6.b:
+B) Tegn en ROC-kurve og beregn AUC for denne prædiktionsmodel A). Giv en vurdering af, om 
+modellen er en Vurderer i at det er en god/ og velegnet prædiktionsmodel?
+```{r}
+roc <- roc(Moeller$overweight,Moeller$response) #forskellen mellem det observerede og det prædikterede 
+
+roc 
+
+plot(1-roc$specificities,roc$sensitivities,type="l") #grafisk kurve
+```
+Fortolkning: AUC er kun cirka 0.53, så prædiktionen er ret dårligt, grafisk kan vi se på kurven at den ca. har ret halvdelen ad gangene. 
+
+6.c:
+Overvej, på baggrund af artiklen, hvilke andre prædiktorer, vi burde tage med i en 
+prædiktionsmodel, for at kunne opnå en bedre prædiktion.
+
+SVAR: Artiklen opdager at morens rygning har stor effekt på risikoen for overvægt, så denne skulle klart inkluderes. Desuden kan mange af de andre signifikante variable i Tabel 2 (fødselsvægt, ammetid, …) overvejes.

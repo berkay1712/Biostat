@@ -1,0 +1,215 @@
+---
+title: "STAT_6"
+author: "Helle Bruhn"
+date: "2026-03-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Set working directory og gem dit script
+```{r}
+setwd("C:/Users/hbruhn/OneDrive - Syddansk Universitet/F2026Epi_biostat_med/Statistik 6_prædiktion")
+```
+
+Pakker:
+```{r}
+library(knitr)
+library(dplyr)
+library(survival)
+library(ggplot2)
+library(tibble)
+library(haven)
+library(caret)
+library(pROC)
+```
+**Opgave 1:**
+1.a: Indlæs datasættet ”Andersen.RData” i R. 
+```{r}
+load(file = "Andersen.RData")
+
+#Få et overblik
+head(Andersen)
+```
+1.b: Lav en lineær regression der forudsiger frugtindtag baseret på personens alder og køn på 70% af datasættet. (hvorfor bruger vi lineær regression, og hvad bør vi være opmærksom på, når vi vil bruge vores model til at prædiktere? Se slide 9 og 10) 
+
+Metode: Der genereres en ny kolonne hvor der ved tilfældighed tildeles 1 eller 0. Der tildeles 1 til 70%, som angiver at man tilhører træningsdata, de resterende 30% bruges til testdata/valideringsdata.
+```{r}
+set.seed(42) #tilfældig talgenerator, så en talrække starter samme sted hver gang.
+
+Andersen$training = rbinom(dim(Andersen)[1],1,0.7) 
+# rbinom laver en binominal fordelt værdi for hver række
+# Andersen$training laver en ny kolonne
+# dim(Andersen)[1] henter antallet af rækker i datasættet
+# 1 betyder at der angivet 1 eller 0 til hver række en gang
+# 0.7 betyder at der er 70% sandsynlighed for at det bliver 1
+```
+Nu kan vi køre vores model: outcome er frugtindtag (kontinuert), eksponering er køn og alder. Vi laver modellen på træningsdata, altså kun 70% af datasættet, derfor data = subset(). 
+```{r}
+linreg1 <- lm(fruits ~ age+factor(sex), data = subset(Andersen,training==1))
+summary(linreg1)
+```
+Vi konkludere: Alder er ikke signifikant associeret med frugtindtag (p-værdi 0,463). Køn er signifikant associeret med frugtindtag (p-værdi 0,000000276) hvor mænd spiser 108g mindre frugt end kvinder.
+
+Opgave 1.c: Bestem prædiktionen og prædiktionsintervallet for en 50-årig kvinde.
+Prædiktionsinterval: 95% af alle nye observationer med disse
+forklarende variable vil ligge i dette interval.
+
+Metode: Vi laver en ny dataframe med de to betingelser
+```{r}
+new_Andersen <- data.frame(age=50,sex=1)
+```
+De to betingelser bindes sammen med outputtet predict ud fra linreg1, og vi får prædiktion og  et prædiktionsinterval. 
+```{r}
+cbind(new_Andersen,predict(linreg1, newdata = new_Andersen, interval = "predict"))
+```
+Prædikteret værdi (forventet) er 280.568 gram, men den "ægte" værdi for en ny person med 95% sikkerhed er i intervallet [-70.49 : 631.62]
+Dette er et meget bredt interval, det tyder på en stor variation eller svag model
+
+Vi kunne også have tilføjet et konfidensinterval til vores prædiktion, det ville være 95% sikkerhed for at gennemsnittet af nye observationer med disse forklarende variable vil ligge i dette interval.
+
+```{r}
+cbind(new_Andersen,predict(linreg1, newdata = new_Andersen, interval = "confidence"))
+```
+
+Opgave 1d: Evaluer prædiktionen grafisk på de resterende 30% af datasættet.
+Metode: vi bruger de 30% som vi tildelte til træningsdata. Vi sammenligner det observerede frugtindtag med det prædikterede frugtindtag. 
+Vi tegner en ret linje gennem 0 med hældning 1 (pink). Hvis de prædikterede værdier passede godt til de observerede så ville punkterne følge linjen.
+Tilsidst kan vi kalde cor() for at få en værdi for hvor godt vores model præstere - jo tættere på 1 jo bedre.
+
+```{r}
+subset_30 <- subset(Andersen, training==0)
+subset_30$predicted <- predict(linreg1,newdata=subset_30)
+
+plot(subset_30$fruits,subset_30$predicted,
+     xlab="Observeret frugtindtag",
+     ylab="Forudsagt frugtindtag",
+     main="Model-evaluering på testdata")
+abline(0,1,col="pink",lwd=2)
+
+cor(subset_30$fruits, subset_30$predicted)
+```
+Modellen bruger umiddelbart køn for forklaringsvariable, vi så at alder havde meget lille betydning. Så den placere alle mænd omkring 210 og alle kvinder omkring 300. Vores model er ikke god til at ramme "plet" mellem observeret og prædikteret. Correlation værdien er 0.20, hvilket er meget lavt, og den forklarer derfor kun en lille del af den varriation der er i nye observationer.
+
+**OPGAVE 2**
+2.a: Indlæs AndersenRdata:
+```{r}
+load(file="Andersen.RData")
+```
+2.b: Lav en lineær regression der forudsiger frugtindtag baseret på personens alder, køn og økologisk på 70% af datasættet.
+```{r}
+set.seed(42)
+Andersen$training = rbinom(dim(Andersen)[1],1,0.7)
+linreg2 <- lm(fruits ~ age+factor(sex)+factor(ecological), data = subset(Andersen,training==1))
+summary(linreg2)
+```
+Vi ser at hverken alder eller øko har en signifikant effekt på frugtindtag, køn har en signifikant effekt på frugtindtag, hvor en mand spiser 99.29 gram mindre (p-værdi: <0.001)
+
+2.c: Bestem prædiktionen og prædiktionsintervallet for en 35-årig mand der spiser økologisk,  og en 35-årig mand, der ikke spiser økologisk.
+```{r}
+new_Andersen <- data.frame(age=c(35,35),sex=c(2,2),ecological=c(1,0))
+cbind(new_Andersen,predict(linreg2, newdata = new_Andersen, interval = "predict"))
+```
+Vi får en prædikteret værdi for hver gruppe samt et prædikteret interval: øko_1 149 [-245 : 543] og øko_0 123 [-269 : 516]
+Det er altså et meget bredt prædiktions interval, hvor den "ægte" prædiktion med 95% sikkerhed vil være placeret. 
+
+2.d) Evaluer prædiktionen grafisk på de resterende 30% af datasættet
+```{r}
+Andersen2 = cbind(Andersen,predict(linreg2, newdata = Andersen, interval = "predict")) # Vi danner en ny kolonne med prædikterede værdier og intervaller
+
+plot(subset(Andersen2,training==0)$fruits,subset(Andersen2,training==0)$fit) # De observerede og de prædikterede værdier plottes
+abline(0,1) # Der tegnes en ret linje fra 0,0 med hældningen 1
+
+cor(subset(Andersen2,training==0)$fruits,subset(Andersen2,training==0)$fit)# korrelationen mellem de prædikterede og observerede værdier bestemmes
+```
+Stadig ikke overbevisende (men måske lidt bedre end i opgave 1, 0,22 vs. 0,20)
+
+**OPGAVE 3**
+
+3.a: Indlæs datasættet ”Nielsen.RData” i R.
+```{r}
+load(file="Nielsen.RData")
+```
+3.b: Lav en logistisk regression der forudsiger lymfekræft baseret på personens alder, 
+køn og tatovering på 70% af datasættet. (Snak om: hvorfor logistisk? Hvilke modelantagelser?)
+
+fra slide 11: Prædiktionen giver os for diktome udfald for hver ny person sandsynligheden for
+udfaldet (mellem 0 og 1) Prædiktionsinterval bruges ikke i denne sammenhæng. Fordi resultatet i forvejen er en sandsynlighed, og sandsynlighed for en sandsynlighed er forvirrende
+```{r}
+set.seed(42)
+Nielsen$training = rbinom(dim(Nielsen)[1],1,0.7) # Der laves en ny kolonne med 70% af datasættet
+
+#Herefter laver vi vores model som er en logistisk regression, derfor bruges glm med family = "binomial".
+logreg <- glm(factor(case) ~ age+factor(sex)+factor(tatoo), data = subset(Nielsen,training==1), 
+              family = "binomial")
+summary(logreg)
+exp(coef(logreg)) #eksponentiere coefficienter
+exp(confint(logreg)) #og konfidence interval
+```
+Fortolkning:Baseline odds for at blive case (få lymfekræft) er 0.4 [0.29 : 0.56]. Alder, køn og tatoo er ikke signifikante, da de alle går gennem 1.
+Måske man kunne argumentere for at det var værd at se på tatoo der viser 18% højere risiko, selvom CI overlapper 1 og p 0.087.
+
+3.c: Tegn er ROC-kurve på de resterende 30% og beregn AUC. Hvad fortæller denne kurve jer?
+Obs: Installering af pakken: pROC er gjort i første chunck. 
+
+Metode: Vi tilføjer først en kollonne i datasættet med sandsynligheden (kaldet response) for at tilhøre hhv. gruppe 0 ell. 1. Hvis denne sandsynlighed er tætteste på 0, er det mest sandsynligt at tilhøre gruppe 0.
+```{r}
+Nielsen2 = cbind(Nielsen,response=predict(logreg, Nielsen, type="response"))
+
+#prøv at kigge på hvordan det ser ud i datasættet nu
+```
+Vi bemærker at alle værdier ligger omkring 0.2 til 0.3, så modellen adskiller ikke grupperne ret godt.
+
+Nu laver vi vores ROC, hvor vi vil vurdere hvor godt modellen (binær) kan skelne mellem de to klasser:
+Vi laver kun analysen på training, og inddeler i hhv. case (det observerede) og respons (det prædikterede)
+```{r}
+roc <- roc(subset(Nielsen2$case,Nielsen2$training==0),subset(Nielsen2$response,Nielsen2$training==0))
+
+roc
+```
+Fortolkning: Vi kan se at AUC er 0.5129, og det betyder altså at vores model ikke er ret god til at prædikter, 0.5 vil være tilfældigt, som at flippe en mønt og 1 vil være den perfekte opdeling.  
+
+For at tegne ROC kurven tegnes sensitivitet (y-akse) mod specificitet (x-aksen). Her er  kurven for sensitivitet vs 1-specificitet.
+Sensitivitet = sand positiv rate
+Specificitet = sand negativ rate
+1- specificitet = falsk positiv rate.
+```{r}
+
+plot(1-roc$specificities,roc$sensitivities,type="l")
+```
+Kurven er næsten diagonal og fra før ved vi at AUC=0.5129, så modellen er ikke for alvor bedre end at gætte.
+
+3.d: Bestem sensitivitet og specificitet for et cut-off på 0.25 (på de 30% valideringsdata).
+Det betyder altså at hvis sandsynligheden er >= 0.25 defineres de som cases (=1), hvis sandsynligheden er < 0.25 defineres de som kontroller/case = 0.
+
+Metode: Vi definere først cutoff, også en ny kolonne med om observationen er highrisk eller ej. 
+Gennem tabellen kigger vi på hvor mange der nu er i hver gruppe. Herefter beregner vi sensitivitet og specificitet. 
+```{r}
+cutoff = 0.25
+
+Nielsen2$highrisk = ifelse(Nielsen2$response>=cutoff,1,0)
+
+table(subset(Nielsen2$case,Nielsen2$training==0),subset(Nielsen2$highrisk, Nielsen2$training==0)) #der kan tilføjes ,dnn = c("case", "highrisk")) hvis man vil have det for overbliks skyld.
+
+#library(caret) er kaldt oppe ved pakker.
+#Beregn sensitiviteten
+sensitivity(factor(subset(Nielsen2$highrisk, Nielsen2$training==0)), factor(subset(Nielsen2$case,Nielsen2$training==0)))
+
+#Beregn specificiteten
+specificity(factor(subset(Nielsen2$highrisk, Nielsen2$training==0)), factor(subset(Nielsen2$case,Nielsen2$training==0)))
+```
+Noter:
+(0,0) = True Negative (TN): ingen sygdom og model siger ingen sygdom
+(0,1) = False Positive (FP): ingen sygdom men model siger sygdom
+(1,0) = False Negative (FN): sygdom men model siger ingen sygdom
+(1,1) = True Positive (TP): sygdom og model siger sygdom
+
+Tag selv noter til hvordan sensitivitet og specificitet udregnes!   
+
+Konklusion: 
+Sensitivitet: 0.569 = 57% af dem der har sygdom klassificeres korrekt af vores model. Det betyder så også at der mangler at blive klassificeret omkring 43% som faktisk har sygdommen, FN. 
+
+Specificitet: 0.444 = 44% af dem der ikke har sygdom klassificeres korrekt af vores model
+
+Så modellen er ikke ret god til at finde cases og heller ikke til at "frikende" ikke-cases.

@@ -1,0 +1,157 @@
+Eksamensbesvarelse: Biostatistik og Epidemiologi - Marts 2026
+Artikel: Hannan et al. (2019) Predictors of Imminent Risk of Nonvertebral Fracture in Older, High-Risk Women: The Framingham Osteoporosis Study Datasæt: Hannan.RData (n = 1.470)
+
+Spørgsmål 1 – Epidemiologi: Selektionsbias
+a) Beskriv kort studiepopulationen
+Studiepopulationen stammer fra Framingham Study (Original Cohort startet 1948 og Offspring Cohort startet 1971). Den endelige studiepopulation bestod af 1.470 kvinder (med 2.778 observationer, da hver kvinde bidrog med op til 3 DXA-målinger).
+Inklusionskriterier: - Kvinder ≥65 år - Mindst ét af følgende: (1) osteoporose (T-score ≤ −2,5 i femoral neck eller lumbal columna), (2) osteopeni (T-score > −2,5 til ≤ −1,0), eller (3) anamnese med non-vertebral eller vertebral fraktur uanset T-score
+Eksklusionskriterier: - Patologiske frakturer (fx pga. cancer) - Frakturer forårsaget af high-energy traume (trafikuheld, overfald)
+b) Hvorfor denne studiepopulation?
+Forfatternes formål var at identificere prædiktorer for imminent (1–2 år) frakturrisiko hos ældre kvinder med høj risiko. Valget af population afspejler dette:
+Ved at inkludere kvinder med allerede lav BMD eller tidligere fraktur fokuserer studiet på den klinisk mest relevante gruppe – dem der har forhøjet frakturrisiko og som kunne have gavn af behandling.
+Eksisterende værktøjer som FRAX prædikterer 10-års risiko, men for ældre kvinder med etableret osteoporose er kortsigtede risikofaktorer mere klinisk relevante, fx ift. beslutning om at starte dyr anabolisk knoglebehandling.
+Inklusionskriterierne svarer i høj grad til NOF’s retningslinjer for hvem der bør overvejes til behandling.
+c) Selektionsbias og validitet
+Intern validitet: Studiepopulationen er bevidst selekteret til højrisikokvinder. Inden for denne gruppe er der ikke nødvendigvis selektionsbias, da alle kvalificerede kvinder fra Framingham-kohorten inkluderes. Dog kan der forekomme selektionsbias gennem frafald: kvinder med dårligst helbred kan dø eller frafalde mellem DXA-skanninger, hvilket kan underestimere sammenhænge. Desuden er Framingham Study velkarakteriseret med >95% follow-up, hvilket minimerer selektionsbias.
+Ekstern validitet: Her er der væsentlige begrænsninger: - Framingham Study består primært af hvide kvinder, så resultaterne kan ikke generaliseres til andre etniske grupper. - Populationen er fra ét geografisk område i USA (Framingham, Massachusetts). - Resultaterne gælder kun for ældre kvinder med osteoporose/osteopeni/frakturhistorie – ikke for generelle postmenopausale kvinder eller mænd.
+
+Spørgsmål 2 – Epidemiologi: Informationsbias
+a) Dataindsamling
+Oplysninger om prædiktorer som “fald det sidste år” og “selvvurderet helbred” er indsamlet via selvrapportering – gennem spørgeskemaer og kliniske interviews ved de regelmæssige Framingham-undersøgelser (hvert 2. eller 4. år afhængigt af kohorten). “Fald det sidste år” er rapporteret som ja/nej ved DXA-skanningsbesøget. “Selvvurderet helbred” er ligeledes selvrapporteret (excellent/good/fair/poor).
+Der er tale om en primær datakilde – data indsamlet direkte fra deltagerne til forskningsformål.
+b) Informationsbias og misklassifikation
+Selvrapportering kan medføre recall bias (erindringsbias): deltagerne skal huske, om de er faldet inden for det seneste år, hvilket er en kognitiv udfordring for ældre kvinder. Denne form for informationsbias kan føre til misklassifikation af prædiktoren “fald det sidste år”:
+Underrapportering: Fald der ikke resulterede i skade eller lægebesøg kan glemmes eller bagatelliseres.
+Fejlagtig tidsafgrænsning: Deltagere kan fejlhusker hvornår et fald fandt sted og rapportere fald uden for det relevante tidsvindue.
+Social desirability bias: Ældre kvinder kan undlade at rapportere fald pga. frygt for at blive opfattet som skrøbelige.
+Resultatet er at nogle kvinder, der faktisk er faldet, bliver klassificeret som ikke-faldere (falsk negative).
+c) Differentiel vs. ikke-differentiel misklassifikation
+Da studiet er prospektivt (prædiktorer måles før udfaldet fraktur opstår), kender deltagerne ikke deres fremtidige frakturstatus på tidspunktet for rapportering af fald. Derfor er misklassifikationen sandsynligvis ikke-differentiel: underrapporteringen af fald er den samme uanset om kvinden efterfølgende får en fraktur eller ej.
+Konsekvens: Ikke-differentiel misklassifikation af eksponeringen biaser typisk estimatet mod nulhypotesen (mod HR = 1). Det betyder at den sande sammenhæng mellem fald og frakturrisiko sandsynligvis er stærkere end det observerede estimat (HR = 1.8 i bivariat analyse). Vi underestimerer altså den reelle effekt af fald som prædiktor for fraktur.
+
+Spørgsmål 3 – Epidemiologi: Konfundering, mediation og effektmodifikation
+a) Fald som konfunder, mediator eller collider
+I sammenhængen mellem calcium channel blockers (eksponering) og incident fraktur (udfald):
+Fald er en mediator. Den kausale kæde er:
+Calcium channel blockers → Fald → Fraktur
+Begrundelse: Calcium channel blockers er associeret med svimmelhed (som angivet i opgaven). Svimmelhed øger risikoen for fald, og fald er den direkte udløsende årsag til de fleste non-vertebrale frakturer. Fald ligger altså på den kausale vej mellem brug af calcium channel blockers og fraktur.
+Fald er ikke en konfunder, da det ikke opfylder kravet om at være associeret med eksponeringen uden at ligge på den kausale vej – tværtimod er det netop en konsekvens af eksponeringen.
+Fald er ikke en collider, da en collider kræver at både eksponering og udfald forårsager den tredje variabel. Her forårsager fald frakturer, ikke omvendt.
+b) Håndtering af konfunder vs. mediator
+Konfunder: Skal justeres for i analysen (fx inkluderes som kovariat i regressionsmodellen, eller via stratificering/matching). Formålet er at fjerne den skæve sammenhæng. Resultater rapporteres som justerede estimater, og det bør fremgå hvilke konfoundere der er justeret for.
+Mediator: Skal ikke justeres for, hvis man ønsker at estimere den totale effekt af eksponeringen. Justering for en mediator fjerner den indirekte effekt og giver kun den direkte effekt, hvilket underestimerer den samlede sammenhæng. Hvis man er interesseret i at dekomponere den totale effekt i direkte og indirekte effekter, kan man bruge mediationsanalyse og rapportere begge dele separat.
+c) BMD som effektmodifikator for sammenhængen fald → fraktur
+BMD kan plausibelt være en effektmodifikator i sammenhængen mellem fald og fraktur:
+Kvinder med lav BMD (osteoporose) har skrøbelige knogler. Et fald hos disse kvinder har langt større sandsynlighed for at resultere i en fraktur end et tilsvarende fald hos kvinder med normal BMD.
+Kvinder med relativt bevaret BMD (osteopeni) kan bedre modstå den mekaniske belastning af et fald uden fraktur.
+Altså: effekten af fald på frakturrisiko er formentlig stærkere ved lav BMD end ved højere BMD. For at undersøge dette formelt kan man inkludere et interaktionsled (fald × BMD T-score kategori) i Cox-regressionsmodellen og teste om det er signifikant. Artiklen rapporterer at der ikke blev fundet signifikante interaktioner (s. 4), men dette kan skyldes begrænset statistisk power.
+
+Spørgsmål 4 – Biostatistik: Spørgsmål til artiklen
+a) Fortolkning af HR = 1.7 (1.12–2.57) for “History of fracture”
+Kvinder med tidligere fraktur har en 1,7 gange så høj hazard (øjeblikkelig risiko) for non-vertebral fraktur inden for 1 år sammenlignet med kvinder uden tidligere fraktur, i den ujusterede (bivariate) analyse. 95% konfidensintervallet (1.12–2.57) angiver at vi med 95% sikkerhed kan sige at den sande HR ligger mellem 1.12 og 2.57. Da intervallet ikke inkluderer 1.0, er sammenhængen statistisk signifikant (p = 0.01).
+b) Antagelser for Cox-regression
+Cox proportional hazards-modellen har følgende antagelser:
+Proportional hazards (PH-antagelsen): Hazard ratio mellem grupper er konstant over tid. Dvs. forholdet mellem frakturrisikoen for kvinder med vs. uden frakturhistorie er det samme på alle tidspunkter i follow-up-perioden.
+Uafhængige censureringer: Censurering (fx død, lost to follow-up) er uafhængig af risikoen for fraktur.
+Log-lineær sammenhæng: For kontinuerte variabler antages en lineær sammenhæng mellem kovariaten og log-hazard.
+Uafhængighed af observationer: Observationerne antages at være uafhængige. I dette studie er der gentagne observationer per kvinde, hvilket forfatterne håndterer med en clustered Cox-model med robust variansestimering.
+c) Forskel mellem HR = 1.7 (tabel 3a) og HR = 1.4 (tabel 4)
+Tabel 3a er en bivariat (ujusteret) analyse hvor kun “History of fracture” indgår, mens tabel 4 er en multivariabel (justeret) analyse med justering for bl.a. alder, BMD T-score, selvvurderet helbred, fald og medicinforbrug. Justering for disse konfoundere reducerer HR fra 1.7 til 1.4, da en del af den rå sammenhæng skyldtes fælles årsager (fx ældre kvinder har både højere sandsynlighed for tidligere fraktur og højere risiko for ny fraktur).
+Bemærk at HR = 1.4 i tabel 4 ikke længere er statistisk signifikant (p = 0.14, 95% CI: 0.89–2.19 inkluderer 1.0). Frakturhistorie mister altså sin uafhængige prædiktive værdi efter justering, hvilket tyder på at den bivariate sammenhæng i høj grad var konfunderet.
+d) Vurdering af c-index (AUC) = 0.71
+En c-index på 0.71 indikerer acceptabel til god diskrimination:
+0.50: Ingen diskrimination (tilfældig)
+0.60–0.70: Acceptabel
+0.70–0.80: God
+0.80–0.90: Fremragende
+0.90+: Exceptionel
+Modellen med c-index = 0.71 kan altså i rimelig grad skelne mellem kvinder der får fraktur og kvinder der ikke gør. Det er bedre end FRAX’s rapporterede AUC på ca. 0.60 for major osteoporotic fracture. Dog er der stadig rum for forbedring – modellen fejlklassificerer ca. 29% af tilfældene. For klinisk brug kunne modellen bruges til at identificere højrisikokvinder, men bør suppleres med klinisk vurdering.
+e) Sammenligning 1-års vs. 2-års model
+1-års modellen (tabel 3a/4): Flere prædiktorer er signifikante (frakturhistorie, selvvurderet helbred, BMD T-score, nitratbrug). c-index = 0.71.
+2-års modellen (tabel 3b/4 højre): Sammenhængene er attenuerede – estimaterne er svagere og færre er signifikante. c-index = 0.64 (dårligere diskrimination).
+Foretrukket model: 1-års modellen. Begrundelse: - Bedre diskrimination (c-index 0.71 vs. 0.64) - Stærkere og mere signifikante prædiktorer - Klinisk mere relevant: studiet handler netop om imminent frakturrisiko, og risikofaktorer som fald og medicinforbrug har størst prædiktiv værdi på kort sigt - Attenuering over 2 år tyder på at risikofaktorerne “forældes” – deres effekt aftager med tiden, fx kan medicinforbrug ændres, fald er mere tidsnært relevante - For behandlingsbeslutninger (fx opstart af dyr anabolisk terapi) er 1-års risiko mest beslutningsrelevant
+
+Spørgsmål 5 – Biostatistik: Spørgsmål til datasættet
+a) Proportion frakturer med 95% CI
+load("Hannan.RData")
+
+# Proportion frakturer
+n <- nrow(Hannan)        # 1470
+x <- sum(Hannan$Fraktur) # 69
+prop <- x / n            # 0.0469
+
+# 95% konfidensinterval
+binom.test(x, n)
+Resultat: 69 ud af 1.470 kvinder har fraktur, svarende til en proportion på 4,69% (95% CI: 3,67% – 5,90%).
+Altså har knap 5% af kvinderne i datasættet en fraktur. Konfidensintervallet angiver at den sande proportion i populationen med 95% sikkerhed ligger mellem 3,7% og 5,9%.
+b) Ujusteret logistisk regression: ADL → Fraktur
+model_b <- glm(Fraktur ~ ADL, data = Hannan, family = binomial)
+summary(model_b)
+exp(cbind(OR = coef(model_b), confint.default(model_b)))
+Resultat:
+Fortolkning: For hver enheds stigning i ADL-score (dvs. bedre funktionsevne) falder odds for fraktur med en faktor 0.70 (30% reduktion). Sammenhængen er statistisk signifikant (p = 0.040). Kvinder med højere ADL-score (bedre funktionsniveau) har altså lavere odds for fraktur. Dette er biologisk plausibelt: bedre funktionsniveau indikerer bedre balance, muskelstyrke og mobilitet, som beskytter mod fald og dermed frakturer.
+c) Justeret logistisk regression
+model_c <- glm(Fraktur ~ ADL + Alder + Tidl_fald + Rygning,
+               data = Hannan, family = binomial)
+summary(model_c)
+exp(cbind(OR = coef(model_c), confint.default(model_c)))
+Resultat:
+Fortolkning i forhold til 5b:
+ADL (OR = 0.698, p = 0.036): Effekten af ADL er stort set uændret efter justering (OR 0.704 → 0.698). ADL forbliver en signifikant prædiktor. Det tyder på at alder, fald og rygning ikke konfunderer sammenhængen mellem ADL og fraktur væsentligt – ADL har en uafhængig beskyttende effekt.
+Alder (OR = 1.076, p < 0.001): For hvert års stigning i alder stiger odds for fraktur med 7,6%. Alder er en stærk uafhængig prædiktor.
+Tidl_fald (OR = 3.536, p < 0.001): Kvinder med tidligere fald har 3,5 gange højere odds for fraktur end kvinder uden tidligere fald. Dette er den stærkeste prædiktor i modellen.
+Rygning (OR = 1.054, p = 0.905): Rygning er ikke signifikant associeret med fraktur i denne model. OR er tæt på 1 med et bredt konfidensinterval.
+d) AUC og ROC-kurve
+library(pROC)
+Hannan$pred_prob <- predict(model_c, type = "response")
+roc_obj <- roc(Hannan$Fraktur, Hannan$pred_prob)
+auc(roc_obj)
+plot(roc_obj, main = "ROC-kurve: Prædiktionsmodel for fraktur",
+     col = "blue", lwd = 2, print.auc = TRUE)
+Resultat: AUC = 0.703 (95% CI: 0.640–0.765). Bemærk at dette er en apparent AUC beregnet på træningsdata (modellen evalueres på samme data den er fittet på), og den reelle prædiktive evne på nye data kan være lavere.
+(Se ROC-kurve i ROC_Hannan.png)
+e) Prædikteret risiko for en specifik kvinde
+ny_kvinde <- data.frame(Alder = 80, Tidl_fald = 1, Rygning = 0, ADL = 3)
+predict(model_c, newdata = ny_kvinde, type = "response")
+Resultat: Den prædikterede risiko for fraktur er 24,5%.
+Fortolkning: En 80-årig kvinde med tidligere fald, ikke-ryger og ADL-score på 3 (svær funktionsnedsættelse – kun 6 af 1.470 kvinder i datasættet har ADL ≤ 3) har en estimeret sandsynlighed på ca. 25% for at have en fraktur. Dette er væsentligt højere end den gennemsnitlige proportion i datasættet (4,7%), hvilket afspejler at denne kvinde har flere risikofaktorer: høj alder, tidligere fald og markant nedsat funktionsniveau. Det bør bemærkes at prædiktionen ved ADL = 3 er en ekstrapolation, da 98,9% af datasættets kvinder har ADL ≥ 5, og estimatet derfor bør tolkes med forsigtighed.
+f) Vurdering af modellens kliniske præcision
+AUC = 0.703: Modellen har en acceptabel diskriminationsevne. Den kan i rimelig grad skelne mellem kvinder med og uden fraktur, men er ikke fremragende (AUC < 0.80).
+Prædiktionen for den specifikke kvinde (24,5%) virker klinisk plausibel og brugbar til at identificere højrisikopatienter.
+Samlet vurdering: Modellen har begrænset klinisk præcision. Den er bedre end tilfældig gætning, men vil fejlklassificere en betydelig andel patienter. For at opnå bedre prædiktiv evne ville man inkludere stærkere prædiktorer som BMD T-score (den stærkeste prædiktor i artiklens multivariable model med HR = 2.8), selvvurderet helbred, og evt. medicinforbrug (nitrater). Modellen kan bruges som et groft screeningsværktøj til at identificere kvinder der bør henvises til yderligere udredning, men bør ikke stå alene som klinisk beslutningsgrundlag.
+
+Komplet R-kode
+# ============================================================
+# KOMPLET R-KODE TIL EKSAMEN - MARTS 2026
+# ============================================================
+
+load("Hannan.RData")
+
+# --- 5a: Proportion frakturer ---
+n <- nrow(Hannan)
+x <- sum(Hannan$Fraktur)
+binom.test(x, n)
+
+# --- 5b: Ujusteret logistisk regression ---
+model_b <- glm(Fraktur ~ ADL, data = Hannan, family = binomial)
+summary(model_b)
+exp(cbind(OR = coef(model_b), confint.default(model_b)))
+
+# --- 5c: Justeret logistisk regression ---
+model_c <- glm(Fraktur ~ ADL + Alder + Tidl_fald + Rygning,
+               data = Hannan, family = binomial)
+summary(model_c)
+exp(cbind(OR = coef(model_c), confint.default(model_c)))
+
+# --- 5d: AUC og ROC ---
+library(pROC)
+Hannan$pred_prob <- predict(model_c, type = "response")
+roc_obj <- roc(Hannan$Fraktur, Hannan$pred_prob)
+auc(roc_obj)
+ci.auc(roc_obj)
+plot(roc_obj, main = "ROC-kurve: Prædiktionsmodel for fraktur",
+     col = "blue", lwd = 2, print.auc = TRUE)
+
+# --- 5e: Prædiktion for specifik kvinde ---
+ny_kvinde <- data.frame(Alder = 80, Tidl_fald = 1, Rygning = 0, ADL = 3)
+predict(model_c, newdata = ny_kvinde, type = "response")

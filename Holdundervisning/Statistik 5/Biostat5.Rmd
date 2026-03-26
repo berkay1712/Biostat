@@ -1,0 +1,188 @@
+---
+title: "Biostat w5"
+output:
+  html_document: default
+  pdf_document: default
+date: "2026-02-24"
+---
+
+Load R-pakker
+
+```{r}
+library(knitr)
+library(dplyr)
+library(survival)
+library(ggplot2)
+library(tibble)
+library(haven)
+library(ggfortify)
+```
+
+
+Opgave 2a) Indlæs datasættet
+
+```{r}
+# Opgave 2a. Indlæs datasættet
+
+# Indlæs datasættet Ako.RData
+# Ændre working directory
+setwd("C:/Users/idol/OneDrive - Syddansk Universitet/Documents/PhD/Undervisning/Biostat F26")
+
+# Load datasættet
+load(file = "Ako.RData")
+View(Ako)
+```
+
+Opgave 2b) Lav en Kaplan-Meier kurve for sammenhængen mellem diabetes og 
+galdeblæresygdom og foretag en logrank-test. Hvad kan I konkludere? 
+
+Kaplan-Meier
+```{r}
+km <- survfit(Surv(time, gbd) ~ t2d, data=Ako)
+autoplot(km)
+```
+Rød (0) = personer UDEN type 2-diabetes (t2d = 0)
+Blå (1) = personer MED type 2-diabetes (td2 = 1)
+
+Y-aksen viser overlevelses-sandsynligheden, dvs. sandsynligheden for IKKE at
+have fået galdeblære sygdom endnu. x-aksen viser tid.
+
+Visuelt kan vi se, at kurven for diabetesgruppen ligger lavere hele vejen. Det 
+betyder altså at personer med diabetes hurtigere får galdeblæresygdom end 
+personer uden diabetes.
+
+Logrank test
+survdiff() tester om, overlevelseskurverne (tid til GBD) adskiller sig mellem 
+grupperne. Den sammenligner observerede vs. forventede hændelser under H0: Ingen
+forskel i hazard. 
+
+```{r}
+survdiff(Surv(time,gbd)~t2d,data=Ako)
+```
+For gruppen uden diabetes (t2d = 0) observerede vi 130 tilfælde af GBD. Hvis de
+to grupper havde haft samme hazard (samme risiko over tid), ville vi have 
+forventet 155.9 tilfælde i denne gruppe. Der er altså færre tilfælde end 
+forventet, hvilket tyder på en lavere risiko i denne gruppe.
+
+For gruppen med diabetes (t2d = 1) observerede vi 79 tilfælde af GBD. Hvis 
+grupperne have haft samme hazard, ville vi have forventet 53.1 tilfælde. Det er 
+altså flere tilfælde end forventet, hvilket tyder på en højere risiko i 
+diabetesgruppen.
+
+p = 4e-05. Dette viser, at forskellen mellem grupperne er statistisk signifikant. 
+Vi kan konkludere, at personer med diabetes har en signifikant højere hazard 
+(risiko over tid) for GBD end personer uden diabetes.
+
+
+Opgave 2c) Gennemfør en Cox-regression for sammenhængen mellem diabetes og
+galdeblæresygdom justeret for uddannelse og alder. Hvad kan i konkludere?
+
+OBS: Cox-modellen arbejder med log(hazard): modellen bruger log-skalaen for at 
+kunne modellere hazard ratio
+
+```{r}
+cox <- coxph(Surv(time, gbd) ~ t2d + factor(edu) + age, data = Ako)
+summary(cox)
+
+```
+Derfor kan vi se i outputtet at vi har coef og exp(coef). Vi skal aflæse 
+exp(coef) og bruge dette til at fortolke med, da det er hazard ratioen, men coef 
+er log(HR).
+
+Aflæsning fra output
+t2d: HR = 1.73, CI: 1.30-2.29, p = 0.00014
+
+Efter justering for både alder og uddannelse viser Cox‑regressionen, at personer 
+med type 2‑diabetes har en signifikant højere hazard for galdeblæresygdom 
+(HR = 1.73; 95% CI: 1.30–2.29; p < 0.001). Dette svarer til en ca. 73% øget
+risiko sammenlignet med personer uden diabetes. Alder er også en signifikant 
+risikofaktor, mens uddannelse ikke er. Den samlede model er statistisk 
+signifikant (den samlede model forklarer risikoen for galdeblæresygdom 
+signifikant bedre end en model uden kovariater).
+
+Opgave 2d) Tjek de relevante modelantagelser for denne Cox-regression. Er de 
+opfyldt? 
+
+```{r}
+cox.zph(cox, transform="km")
+```
+cox.zph() (cox proportional hazards test) tjekker om proportional hazards 
+antagelsen er opfyldt: altså om HR er konstant over hele opfølgningsperioden
+
+Hvad betyder det: for t2d betyder det, at der er 73% højere risiko for udvikling
+af gbd, og at denne risiko skal gælde uanset om det er efter 1 år, 10 år eller 
+30 år
+
+P-værdierne er ikke signifikante, det peger på at antagelsen er opfyldt
+
+Opgave 3a) Indlæs datasættet - er gjort, se under opgave 2a. 
+
+Opgave 3b) Lav en Kaplan-Meier kurve for sammenhængen mellem central obesity og 
+galdeblæresygdom og foretag en logrank-test. Hvad kan I konkludere? 
+
+Kaplan-Meier
+
+```{r}
+km <- survfit(Surv(time, gbd) ~ central_ob, data=Ako)
+autoplot(km)
+survdiff(Surv(time,gbd)~central_ob,data=Ako)
+```
+
+For gruppen uden central obesity (central_ob = 0) observerede vi 153 tilfælde af
+GBD. Hvis de to grupper havde haft samme hazard (samme risiko over tid), ville
+vi have forventet 170.5 tilfælde i denne gruppe. Der er altså færre tilfælde end 
+forventet, hvilket tyder på en lavere risiko i denne gruppe.
+
+For gruppen med central obesity (central_ob = 1) observerede vi 56 tilfælde af 
+GBD. Hvis grupperne have haft samme hazard, ville vi have forventet 38.5 
+tilfælde. Det er altså flere tilfælde end forventet, hvilket tyder på en højere
+risiko i central obesity gruppen.
+
+p = 0.002. Dette viser, at forskellen mellem grupperne er statistisk signifikant. 
+Vi kan konkludere, at personer med central obesity har en signifikant højere
+hazard (risiko over tid) for GBD end personer uden central obesity.
+
+```{r}
+cox <- coxph(Surv(time, gbd) ~ central_ob + factor(edu) + age, data = Ako)
+summary(cox)
+```
+Aflæsning fra output
+t2d: HR = 1.58, CI: 1.16-2.15, p = 0.00345
+
+Efter justering for både alder og uddannelse viser Cox‑regressionen, at personer 
+med central obesity har en signifikant højere hazard for galdeblæresygdom 
+(HR = 1.58; 95% CI: 1.16–2.15; p < 0.003). Dette svarer til en ca. 58% øget
+risiko sammenlignet med personer uden central obesity. Alder er også en 
+signifikant risikofaktor, mens uddannelse ikke er. Den samlede model er 
+statistisk signifikant (likelihood ratio test p < 0.05).
+
+Opgave 2d) Tjek de relevante modelantagelser for denne Cox-regression. Er de 
+opfyldt? 
+
+```{r}
+cox.zph(cox, transform="km")
+```
+cox.zph() (cox proportional hazards test) tjekker om proportional hazards 
+antagelsen er opfyldt: altså om HR er konstant over hele opfølgningsperioden
+
+P-værdierne er ikke signifikante, det peger på at antagelsen er opfyldt.
+
+Opgave 3e) Undersøg ved hjælp af en Cox-regression om der er en interaktion 
+mellem diabetes og central obesity i forhold til udviklingen af galdeblæresygdom 
+(justeret for uddannelse og alder).
+
+```{r}
+cox <- coxph(Surv(time, gbd) ~ central_ob*t2d + factor(edu) + age, data = Ako)
+summary(cox)
+```
+
+Fortolkning af interaktionsanalysen
+Interaktionsleddet (central_ob:t2d)
+HR = 0.77, CI: 0.41-1.43, p = 0.4. 
+
+Cox-regressionen viser ingen signifikant interaktion mellem diabetes og central 
+obesity (HR = 0.77, p = 0.40). Det betyder, at effekten af diabetes på risikoen
+for galdeblæresygdom ikke afhænger af, om personen har central fedme, og omvendt. 
+
+
+

@@ -1,0 +1,220 @@
+---
+title: "STAT_øv2"
+author: "Helle Bruhn"
+date: "2026-02-04"
+output: html_document
+---
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Værd at vide om Quarto og Markdown: Ny chunk til kode kan laves med genvej "clrt + alt + i". Hvis output fra chunken skal være sjult i din rapport skal du i {r,} i starten af hver chunk definere det.
+Skjule kode: ```{r, echo=FALSE}
+Skjule warning: ```{r, warning=FALSE}
+Køre kode, men ikke vise alt output: ```{r, include=FALSE} - bemærk at jeg bruger denne ved working directory og pakker. 
+
+Inden du går igang: GEM dit script Set din working directory til mappen hvor du har filerne fra denne øvelsestime
+
+```{r, include=FALSE}
+setwd("C:/Users/hbruhn/OneDrive - Syddansk Universitet/F2026Epi_biostat_med/Statistik 2_ Hypotesetests og konfidensintervaller")
+```
+
+Indlæs nødvendige pakker, tilføj dem løbende i denne chunck for at have dem samlet
+
+```{r, include=FALSE}
+library(tidyverse)
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(DescTools)
+library(crosstable)
+library(pastecs)
+```
+
+***ØVELSE 1: Gennemgåes i timen***
+
+**Øvelse 1.1: Indlæs datasættet Berg2.Rdata som vi skal arbejde med i disse øvelser**
+
+```{r}
+load("Berg2.Rdata")
+```
+
+Ekstra: Kig gerne i data og få et overblik over variable og kodning
+
+```{r}
+View(Berg) #overblik over hele data
+str(Berg) #struktur og variblers kodning/type
+summary(Berg) #opsummering af variable, meningsfuld for kontinuere variable
+```
+
+**Øvelse 1.2: Gennemsnit og spredning for start af tilskud i de to grupper**
+
+```{r}
+#bruger basic funktioner i R, bruger indeksering via [] til at vælge hvilken gruppe
+mean(Berg$agestart[Berg$Group==0], na.rm=TRUE) #gennemsnit for start tid i gruppe 0
+sd(Berg$agestart[Berg$Group==0], na.rm=TRUE)
+
+mean(Berg$agestart[Berg$Group==1], na.rm=TRUE) #gennemsnit for start tid i gruppe 1
+sd(Berg$agestart[Berg$Group==1], na.rm=TRUE)
+
+#bruger dplyr pakke til at gruppere og opsummere
+Berg %>%
+  group_by(Group) %>%
+  summarise(
+    mean_agestart = mean(agestart, na.rm = TRUE),
+    sd_agestart = sd(agestart, na.rm = TRUE)
+  )
+```
+
+Resultaterne viser, at den gennemsnitlige startalder (agestart) er nogenlunde ens i de to grupper. For gruppe 0 er gennemsnittet 2,65 med en standardafvigelse på 1,42, mens gruppe 1 har et gennemsnit på 2,91 og en standardafvigelse på 1,36.
+
+**Øvelse 1.3: Median og kvartiler for start af tilskud i de to grupper**
+
+```{r}
+#bruger basic funktioner i R, bruger indeksering via [] til at vælge hvilken gruppe
+median(Berg$agestart[Berg$Group==0], na.rm=TRUE)
+quantile(Berg$agestart[Berg$Group==0], probs = c(0.25, 0.75), na.rm=TRUE)
+
+#bruger dplyr pakke til at gruppere og opsummere
+Berg %>%
+  group_by(Group) %>%
+  summarise(
+    median_agestart = median(agestart, na.rm = TRUE),
+    q1_agestart = quantile(agestart, probs = 0.25, na.rm = TRUE),
+    q3_agestart = quantile(agestart, probs = 0.75, na.rm = TRUE)
+  )
+```
+
+For gruppe 0 er medianen for start af tilskud 2,31, med en 1. kvartil på 1,73 og 3. kvartil på 3,27. For gruppe 1 er medianen for start af tilskud 2,69, med en 1. kvartil på 1,89 og 3. kvartil på 3,50.
+
+Ofte kan kvartil visualiseres via et boxplot, hvor medianen er den streg der deler boxen i to, og kvartilerne er de nedre og øvre grænser for boxen. Observationer som er udenfor disse kvartiler vil være plottet som punkter.
+
+```{r}
+ggplot(Berg, aes(x = factor(Group), y = agestart)) +
+  geom_boxplot() +
+  labs(x = "Gruppe", y = "Start af tilskud") +
+  ggtitle("Boxplot af grupper og start af tilskud") +
+  theme_minimal() #kan gøres meget mere tilpasset med farver og forskellige temaer
+```
+
+**Øvelse 1.4: Tjek om observationerne for start af tilskud i grupperne er normalfordelt**
+
+```{r}
+#Bruger basic funktioner i R til at lave et QQ-plot for hver gruppe
+qqnorm(Berg$agestart[Berg$Group==0], main = "QQ-plot for Gruppe 0")
+qqline(Berg$agestart[Berg$Group==0], col = "red")
+
+qqnorm(Berg$agestart[Berg$Group==1], main = "QQ-plot for Gruppe 1")
+qqline(Berg$agestart[Berg$Group==1], col = "red")
+
+#Bruger ggplot2 til at lave et mere tilpasset QQ-plot
+ggplot(Berg, aes(sample = agestart)) +
+  geom_qq(size = 1) +
+  geom_qq_line(color = "red") + 
+  facet_wrap(~Group) +
+  labs(
+    title = "QQ-plot for start af tilskud i hver gruppe",
+    x = "Teoretiske kvantiler",
+    y = "Observerede kvantiler")
+
+```
+
+Grafisk vurderes det at fordeling for start af tilskud i begge grupper afviger fra normalfordelingen, især i gruppens yderpunkter (halerne). Bodyen af data vurderes dog at være tilnærmelsesvis normalfordelt, idet punkterne ligger relativt tæt på den teoretiske linje. Vi ser her et eksempel på, hvordan afvigelserne datasættes haler giver skævhed i fordelingen og dermed påvirker vurdering af, om data er normalfordelt.
+
+**Øvelse 1.5: t-test for start af tilskud i de to grupper**
+
+```{r}
+t_test_result <- t.test(agestart ~ Group, data = Berg)
+t_test_result
+```
+
+Der på baggrund af t-test ikke evidens for en forskel i gennemsnitlig startalder mellem de to grupper, p‑værdi er på 0,34. Det betyder, at den observerede forskel i gennemsnit (2,65 i gruppe 0 og 2,91 i gruppe 1) kan skyldes tilfældig variation. 95 % konfidensintervallet for forskellen, fra –0,81 til 0,28 går igennem nul. Samlet set tyder resultaterne på, at de to grupper har en sammenlignelig startalder.
+
+**Øvelse 1.6: Mann-Whitney/Wilcoxon ranksum-test for start af tilskud i de to grupper**
+
+```{r}
+wilcox_test_result <- wilcox.test(agestart ~ Group, data = Berg)
+wilcox_test_result
+
+```
+
+Wilcoxon rank sum‑testen viser ingen statistisk signifikant forskel i startalder mellem gruppe 0 og gruppe 1 (p = 0,14). De to grupper har sammenlignelige fordelinger af agestart, og observerede forskelle sandsynligvis skyldes tilfældig variation.
+
+**Øvelse 1.7: Vurdering af de to testresultater** Begge testresultater indikerer, at der ikke er en statistisk signifikant forskel i startalder mellem de to grupper. T-testen, som antager normalfordeling, og Wilcoxon-testen, som er en ikke-parametrisk test, giver begge p-værdier over 0,05, hvilket tyder på, at eventuelle observerede forskelle i startalder sandsynligvis skyldes tilfældig variation snarere end en reel forskel mellem grupperne. Begge test konkludere det sammen men Wilcoxon-testen forudsætter ikke normalfordeling, og understøtter konklusionen om, at der ikke er nogen tydelig forskel mellem grupperne, selv når der tages højde for skævhed og outliers i data.
+
+***ØVELSE 2: Prøv selv og tjek bagefter med løsningen nedenfor***
+**Øvelse 2.1: Indlæs data**
+```{r}
+#load("Berg2.Rdata")
+```
+**Øvelse 2.2: Gennemsnit og spredning for fuldt tilskud (timefull) i de to grupper**
+```{r}
+Berg %>%
+  group_by(Group) %>%
+  summarise(
+    mean_timefull = mean(timefull, na.rm = TRUE),
+    sd_timefull = sd(timefull, na.rm = TRUE)
+  )
+```
+For gruppe 0 er gennemsnittet for fuldt tilskud 24.16 med en standardafvigelse på 37.03, mens gruppe 1 har et gennemsnit på 26.96 og en standardafvigelse på 70.18.
+**Øvelse 2.3: Median og kvartiler for fuldt tilskud i de to grupper**
+```{r}
+Berg %>%
+  group_by(Group) %>%
+  summarise(
+    median_timefull = median(timefull, na.rm = TRUE),
+    q1_timefull = quantile(timefull, probs = 0.25, na.rm = TRUE),
+    q3_timefull = quantile(timefull, probs = 0.75, na.rm = TRUE)
+  )
+```
+For gruppe 0 er medianen for fuldt tilskud 10.77, med en 1. kvartil på 4.12 og 3. kvartil på 16.45. For gruppe 1 er medianen for fuldt tilskud 5.74, med en 1. kvartil på 2.09 og 3. kvartil på 16.45.
+Bemærk her den store forskel ml. gennemsnit og median. 
+Viser grafisk via boxplot
+```{r}
+ggplot(Berg, aes(x = factor(Group), y = timefull)) +
+  geom_boxplot() +
+  labs(x = "Gruppe", y = "Fuldt tilskud") +
+  ggtitle("Boxplot af grupper og fuldt tilskud") +
+  theme_minimal()
+```
+**Øvelse 2.4: Tjek om observationerne for fuldt tilskud i grupperne er normalfordelt**
+```{r}
+#Bruger basic funktioner i R til at lave et QQ-plot for hver gruppe
+qqnorm(Berg$timefull[Berg$Group==0], main = "QQ-plot for Gruppe 0")
+qqline(Berg$timefull[Berg$Group==0],  col = "red")
+
+qqnorm(Berg$timefull[Berg$Group==1], main = "QQ-plot for Gruppe 1")
+qqline(Berg$timefull[Berg$Group==1], col = "red")
+
+#Bruger ggplot2 til at lave et mere tilpasset QQ-plot
+ggplot(Berg, aes(sample = timefull)) +
+  geom_qq(size = 1) +   
+  geom_qq_line(color = "red") +
+  facet_wrap(~Group) +
+  labs(
+    title = "QQ-plot for fuldt tilskud i hver gruppe",
+    x = "Teoretiske kvantiler",
+    y = "Observerede kvantiler")
+
+  
+```
+Grafisk vurderes det at fordeling for fuldt tilskud i begge grupper afviger markant fra normalfordelingen, især i gruppens yderpunkter (halerne). Bodyen af data vurderes dog at være tilnærmelsesvis normalfordelt, idet punkterne ligger relativt tæt på den teoretiske linje. Vi ser her et eksempel på, hvordan afvigelserne datasættes haler giver skævhed i fordelingen og dermed påvirker vurdering af, om data er normalfordelt.
+
+**Øvelse 2.5: t-test for fuldt tilskud i de to grupper**
+```{r}
+t_test_result2 <- t.test(timefull ~ Group, data = Berg)
+t_test_result2
+```
+Der på baggrund af t-test ingen evidens for en forskel i gennemsnitlig tid indtil fuldt tilskud mellem de to grupper, p‑værdi er på 0.80. 95 % konfidensintervallet for forskellen, fra –24.81 til 19.20 går igennem nul.
+
+**Øvelse 2.6: Mann-Whitney/Wilcoxon ranksum-test for fuldt tilskud i de to grupper**
+```{r}
+wilcox_test_result2 <- wilcox.test(timefull ~ Group, data = Berg)
+wilcox_test_result2
+```
+Wilcoxon rank sum‑testen viser statistisk signifikant forskel i tid indtil fuldt tilskud mellem gruppe 0 og gruppe 1 (p = 0,04). Dette indikere at de to grupper ikke har samme fordeling af tid til fuldt tilskud.
+
+**Øvelse 2.7: Vurdering af de to testresultater** 
+Fordi t-testen, som antager normalfordeling, og Wilcoxon-testen, som er en ikke-parametrisk test, giver forskellige resultater må vi argumentere for, hvilken vi stoler mest på.
+Da normalitetsantagelsen ikke er opfyldt for variablen timefull, og der ses tydelig skævhed og afvigelser i halerne, er t‑testen mindre pålidelig i dette tilfælde. Wilcoxon rank sum‑testen er derimod robust over for skæve fordelinger og outliers og er derfor mere passende for disse data. Da Wilcoxon‑testen viser en statistisk signifikant forskel mellem grupperne (p = 0,04), vurderes denne test som den mest troværdige, og vi konkluderer derfor, at der er en forskel i tid til fuldt tilskud mellem grupperne.
